@@ -42,16 +42,22 @@
 3. **页面打开后**会自动载入内置合成广角标定图（800×600）并完成检测、拟合与校正；三栏分别是：
    - **左栏**：分辨率关系、显式模型选择（径向阶数 / 切向开关）、内参、畸变系数与有效半径、输出取景、求解预算、标定点列表
    - **中栏**：畸变图 / 校正图 / 并排视图。在畸变图上**拖动橙色标定点**即可改变标定；橙色十字是当前拟合下理想网格交点在畸变图中的实际位置
-   - **右栏**：鼠标映射探针（正向/反向坐标与迭代次数）、坐标误差（含逐点表与误差曲线）、线条弯曲测量、无效区域统计、拟合诊断
+   - **右栏**：鼠标映射探针（正向/反向坐标与迭代次数）、坐标误差（含逐点表与误差曲线）、线条弯曲测量、无效区域统计、**畸变诊断（边缘异常追踪 + 阶段证据链）**、拟合诊断
 
 4. **常用窗口操作**（全部触发真实计算，无预设结果）
    - 「载入内置标定图」：重新生成强畸变（k1≈-0.42, k2≈+0.19, k3≈-0.028）且主点偏移的场景并重算
    - 「载入图片」「载入参数 JSON」「载入对应点」：使用自己的素材；尺寸与参考分辨率不同时页面会显示并执行比例调整
    - 「保留视场 / 裁剪输出」：切换取景，左侧立即显示实测输出尺寸与比例
    - 径向阶数切到 2 / 4 阶：模型真正变化并重新拟合，残差随之增大；若所选阶数在当前系数下超出单调可逆范围，有效半径会被**收缩并明确提示**（不是静默失败）
-   - 「导出校正 PNG / 参数 JSON / 对应点 / 评估 JSON」：由当前实际计算结果生成文件，可离线核对
+   - 「导出校正 PNG / 参数 JSON / 对应点 / 评估 JSON / 诊断 JSON」：由当前实际计算结果生成文件，可离线核对；诊断 JSON 按原始分辨率重算坐标残差与失败区域
 
    拖动一个标定点后，如果它与整体模型明显不符，拟合会**剔除该点并在右栏与顶部提示条中报出点号**，其余点保持原有精度；这属于界面主动暴露的异常，而非把错误吸收进结果。
+
+5. **畸变诊断（右栏「畸变诊断」区）**：每次拖动标定点、切换模型或修改参数后实时重算，与图像处理页联动显示——
+   - 边缘黑块 / 局部拉伸的**坐标与有效性追踪**：失败区域（连通标记）逐区域给出输出像素坐标 → 无畸变平面坐标 → 源像素坐标、归一化半径 vs 有效半径、径向缩放与局部拉伸率（来自正向雅可比）
+   - **阶段证据链**：`validate → model → plan → reverse-map → render → measure`，坐标残差与失败区域异常都定位到具体阶段
+   - **已知径向变换探针**：闭式径向曲线 + 预算内回环反解，用以区分参数单位/尺度异常、迭代不收敛、输入覆盖不足（边缘越界）三类根因，每条原因都带观测证据
+   - 诊断只读取光栅与映射，**不涂补失败像素**；异常记录条数有硬上限（默认 48 条 / 8 个区域），预算外丢弃只计数不展开，日志成本有界
 
 ## 二、交付物
 
@@ -70,6 +76,7 @@
 | `rectified-invalid-overlay.png` | 无效区域红色边界叠加 |
 | `rectified-with-ideal-grid.png` / `rectified-markers.png` | 校正图上叠加理想网格 / 检测点，用于目视核对 |
 | `evaluation.json` | 坐标残差、线条弯曲、检查阈值与通过判定（全部实测） |
+| `diagnosis.json` | 畸变诊断：阶段证据链、失败区域坐标追踪、根因分类与日志预算（实测） |
 | `mapping-probes.json` | 15 个映射探针的正向/反向坐标、半径、迭代次数与无效原因 |
 | `resolution-adaptation.json` | 分辨率减半时的内参调整与系数不变性记录 |
 | `contact-sheet.png` / `.json` | 关键视图汇总（人工复核用） |
@@ -80,6 +87,7 @@
 - 校正后坐标残差（在校正光栅中重新检测标记，再与理想交点比较，单位源像素）：RMS **0.1169 px**、最大 0.9243 px
 - 线条弯曲（沿法向扫描实际亮度重心后拟合直线）：RMS **11.2941 px → 0.1530 px（改善 73.81×）**，最大 41.98 px → 0.685 px
 - 保留视场输出 1608×1220，有效像素 81.09%（越界 370,957、模型外 44）
+- 诊断：`ok`，2 个 info 级原因（输入覆盖不足 18.91%、模型有效域外 44 px），失败区域 3 个，异常记录 9 条（预算 48），坐标残差与失败区域均定位到 render/measure 阶段
 - 判定：**PASS**（markerRms / markerMax / bendingRms / bendingMax / improvement 全通过）
 
 ### 参数文件格式（节选）
@@ -104,10 +112,11 @@
 ## 三、终端辅助命令（只用于生成与校验，不替代窗口）
 
 ```bash
-npm run demo       # generate + evaluate：重新生成全部 deliverables
+npm run demo       # generate + evaluate：重新生成全部 deliverables（含 diagnosis.json）
 npm run evaluate   # 只做评估（可加 -- --mode=crop）
 npm run generate   # 只生成畸变图与对应点
-npm test           # 22 个单元测试（模型、求逆预算、分辨率、取景、渲染、鲁棒拟合、有效半径收缩）
+npm run diagnose   # 只做畸变诊断（内置合成场景自检；诊断 JSON 写入 deliverables/）
+npm test           # 31 个单元测试（模型、求逆预算、分辨率、取景、渲染、鲁棒拟合、有效半径收缩、畸变诊断）
 npm run verify     # （开发用）无头浏览器跑一遍界面并截图到 /tmp/ui-verify
 ```
 
@@ -119,6 +128,17 @@ node tools/wideangle-cli.mjs inspect \
   --calibration deliverables/calibration-fitted.json \
   --mode preserve-field --out out/
 ```
+
+诊断一张自有图片（`--image` 与 `--calibration` 必须同时提供，缺失或非法输入直接报错退出，不会用默认值顶替；诊断结论为 broken 时退出码为 2）：
+
+```bash
+node tools/wideangle-cli.mjs diagnose \
+  --image deliverables/distorted-grid.png \
+  --calibration deliverables/calibration-fitted.json \
+  --mode preserve-field --out out/
+```
+
+图形界面是主入口（见上文「窗口启动步骤」）；这些终端命令只用于生成与校验产物，不替代窗口。
 
 ## 四、把程序内部机制对应到需求
 
@@ -132,17 +152,18 @@ node tools/wideangle-cli.mjs inspect \
 | 保留视场 / 裁剪 | `src/core/projection.js` `measureFieldBounds`、`measureCropRect`、`planOutput` |
 | 强畸变 + 中心偏移测试 | `src/core/synthetic.js`（真值 k1/k2/k3、cx/cy 偏移） |
 | 坐标残差与线条弯曲测量 | `src/core/analysis.js` `detectMarkers`、`measureLineBending`、`evaluateRectification` |
-| 可移动标定点与模型调整 | `src/ui/app.js`（拖动 → 鲁棒重拟合 → 实时误差） |
+| 畸变诊断（边缘异常追踪、阶段证据链、根因分类） | `src/core/diagnosis.js` `diagnoseRectification`；CLI `diagnose`；UI 右栏「畸变诊断」+「导出诊断 JSON」 |
+| 可移动标定点与模型调整 | `src/ui/app.js`（拖动 → 鲁棒重拟合 → 实时误差与诊断） |
 
 ## 五、目录
 
 ```
-src/core/      纯计算模块（模型、标定、投影、渲染、分析、合成、PNG 编解码）
+src/core/      纯计算模块（模型、标定、投影、渲染、分析、诊断、合成、PNG 编解码）
 src/node/      Node 侧静态服务与 PNG/JSON 读写
 src/ui/        图形界面（index.html / styles.css / app.js）
 tools/         终端辅助 CLI 与（开发用）无头浏览器自检
 tests/         node:test 单元测试
-deliverables/  生成的真实结果、参数与评估文件
+deliverables/  生成的真实结果、参数、评估与诊断文件
 ```
 
 除开发期用 Playwright 做无头界面自检外，运行时无第三方依赖（PNG 编解码由 `node:zlib` 实现）。

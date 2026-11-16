@@ -1,0 +1,853 @@
+{
+  "generatedAt": "2026-11-16T13:57:24.343Z",
+  "mode": "preserve-field",
+  "referenceResolution": {
+    "width": 1200,
+    "height": 900
+  },
+  "verdict": "ok",
+  "summary": "诊断 ok：2 个原因（fail 0 / warn 0 / info 2）；失败区域 3 个（记录 3），无效像素 371001（异常记录 9 条，预算外丢弃 370992）",
+  "causes": [
+    {
+      "id": "extreme-distortion-domain",
+      "stage": "render",
+      "severity": "info",
+      "summary": "大畸变超出模型有效域：44 个输出像素（0.00%）归一化半径超过 r_max=1.06（实测最大半径 1.059999）",
+      "evidence": {
+        "outsideModel": 44,
+        "fraction": 0.000022,
+        "maxRadius": 1.059999,
+        "validMaxRadius": 1.06,
+        "examples": []
+      }
+    },
+    {
+      "id": "insufficient-coverage",
+      "stage": "render",
+      "severity": "info",
+      "summary": "输入覆盖不足：370957 个输出像素（18.91%）的取样点落在源画面之外（边缘越界），校正图边缘黑块由此产生，只能用填充色标示，不能涂补",
+      "evidence": {
+        "outOfFrame": 370957,
+        "fraction": 0.189094,
+        "outputPixels": 1961760,
+        "examples": [
+          {
+            "destination": {
+              "x": 1544,
+              "y": 300
+            },
+            "plane": {
+              "u": 1316.369,
+              "v": 144.076
+            },
+            "source": {
+              "x": 1199.555,
+              "y": 193.463
+            },
+            "normalizedRadius": 0.708577,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.833508,
+            "localStretch": 0.849627,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          },
+          {
+            "destination": {
+              "x": 1521,
+              "y": 599
+            },
+            "plane": {
+              "u": 1293.369,
+              "v": 443.076
+            },
+            "source": {
+              "x": 1199.702,
+              "y": 441.199
+            },
+            "normalizedRadius": 0.633279,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.860326,
+            "localStretch": 0.852307,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          },
+          {
+            "destination": {
+              "x": 1547,
+              "y": 899
+            },
+            "plane": {
+              "u": 1319.369,
+              "v": 743.076
+            },
+            "source": {
+              "x": 1199.674,
+              "y": 688.185
+            },
+            "normalizedRadius": 0.731058,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.825565,
+            "localStretch": 0.829638,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          }
+        ]
+      }
+    }
+  ],
+  "evidenceChain": [
+    {
+      "stage": "validate",
+      "ok": true,
+      "measurements": {
+        "model": "brown-conrady",
+        "radialOrder": 6,
+        "tangential": true,
+        "warnings": []
+      }
+    },
+    {
+      "stage": "model",
+      "ok": true,
+      "measurements": {
+        "cornerRadius": 0.79061,
+        "validMaxRadius": 1.06,
+        "frameInsideModelFraction": 1,
+        "scaleRangeInFrame": {
+          "min": 0.813918,
+          "max": 1
+        },
+        "monotonicInFrame": true,
+        "roundTrip": {
+          "samples": 96,
+          "maxError": 2.14e-7,
+          "nonConverged": 0,
+          "statuses": {
+            "converged": 96
+          }
+        },
+        "radialCurve": [
+          {
+            "r": 0,
+            "radialScale": 1,
+            "radialDerivative": 1
+          },
+          {
+            "r": 0.046087,
+            "radialScale": 0.999108,
+            "radialDerivative": 0.997327
+          },
+          {
+            "r": 0.092174,
+            "radialScale": 0.996444,
+            "radialDerivative": 0.98936
+          },
+          {
+            "r": 0.138261,
+            "radialScale": 0.992038,
+            "radialDerivative": 0.976252
+          },
+          {
+            "r": 0.184348,
+            "radialScale": 0.985941,
+            "radialDerivative": 0.958264
+          },
+          {
+            "r": 0.230435,
+            "radialScale": 0.978227,
+            "radialDerivative": 0.935755
+          },
+          {
+            "r": 0.276522,
+            "radialScale": 0.968987,
+            "radialDerivative": 0.90919
+          },
+          {
+            "r": 0.322609,
+            "radialScale": 0.958335,
+            "radialDerivative": 0.879136
+          },
+          {
+            "r": 0.368696,
+            "radialScale": 0.946407,
+            "radialDerivative": 0.846266
+          },
+          {
+            "r": 0.414783,
+            "radialScale": 0.933355,
+            "radialDerivative": 0.811351
+          },
+          {
+            "r": 0.46087,
+            "radialScale": 0.919357,
+            "radialDerivative": 0.775271
+          },
+          {
+            "r": 0.506957,
+            "radialScale": 0.904607,
+            "radialDerivative": 0.739005
+          },
+          {
+            "r": 0.553043,
+            "radialScale": 0.889323,
+            "radialDerivative": 0.703637
+          },
+          {
+            "r": 0.59913,
+            "radialScale": 0.873742,
+            "radialDerivative": 0.670354
+          },
+          {
+            "r": 0.645217,
+            "radialScale": 0.858122,
+            "radialDerivative": 0.640445
+          },
+          {
+            "r": 0.691304,
+            "radialScale": 0.842742,
+            "radialDerivative": 0.615305
+          },
+          {
+            "r": 0.737391,
+            "radialScale": 0.8279,
+            "radialDerivative": 0.59643
+          },
+          {
+            "r": 0.783478,
+            "radialScale": 0.813918,
+            "radialDerivative": 0.585419
+          },
+          {
+            "r": 0.829565,
+            "radialScale": 0.801135,
+            "radialDerivative": 0.583976
+          },
+          {
+            "r": 0.875652,
+            "radialScale": 0.789913,
+            "radialDerivative": 0.593905
+          },
+          {
+            "r": 0.921739,
+            "radialScale": 0.780633,
+            "radialDerivative": 0.617118
+          },
+          {
+            "r": 0.967826,
+            "radialScale": 0.773699,
+            "radialDerivative": 0.655626
+          },
+          {
+            "r": 1.013913,
+            "radialScale": 0.769533,
+            "radialDerivative": 0.711545
+          },
+          {
+            "r": 1.06,
+            "radialScale": 0.768579,
+            "radialDerivative": 0.787094
+          }
+        ]
+      }
+    },
+    {
+      "stage": "plan",
+      "ok": true,
+      "measurements": {
+        "mode": "preserve-field",
+        "output": {
+          "width": 1608,
+          "height": 1220
+        },
+        "step": {
+          "x": 1,
+          "y": 1
+        },
+        "offset": {
+          "x": -227.631,
+          "y": -155.924
+        },
+        "fieldSamples": 2910,
+        "fieldRejected": 6,
+        "fieldNonConverged": 0,
+        "cropScale": null,
+        "warnings": [
+          {
+            "code": "FIELD_SAMPLES_REJECTED",
+            "message": "6 个源边界/内点样本超出模型有效范围或无法反演，输出范围由剩余有效样本确定"
+          }
+        ]
+      }
+    },
+    {
+      "stage": "reverse-map",
+      "ok": true,
+      "measurements": {
+        "grid": {
+          "width": 160,
+          "height": 160
+        },
+        "converged": 25600,
+        "iterationsExhausted": 0,
+        "stalled": 0,
+        "diverged": 0,
+        "maxIterations": 58,
+        "maxResidual": 1e-7,
+        "meanResidual": 6e-8,
+        "outsideModel": 1,
+        "outOfFrame": 6056,
+        "validFraction": 0.7634,
+        "inverseBudget": {
+          "maxIterations": null,
+          "tolerance": null,
+          "maxStepNormalized": null
+        }
+      }
+    },
+    {
+      "stage": "render",
+      "ok": true,
+      "measurements": {
+        "output": {
+          "width": 1608,
+          "height": 1220
+        },
+        "valid": 1590759,
+        "invalid": 371001,
+        "validFraction": 0.8109,
+        "outOfFrame": 370957,
+        "outsideModel": 44,
+        "nonFinite": 0,
+        "maxRadius": 1.059999,
+        "validMaxRadius": 1.06,
+        "regionCount": 3,
+        "regions": [
+          {
+            "id": 1,
+            "pixelCount": 192584,
+            "bbox": {
+              "minX": 3,
+              "minY": 0,
+              "maxX": 1607,
+              "maxY": 1198
+            },
+            "centroid": {
+              "x": 1104.03,
+              "y": 236.57
+            },
+            "dominantCause": "edge-out-of-frame",
+            "samples": [
+              {
+                "destination": {
+                  "x": 1544,
+                  "y": 300
+                },
+                "plane": {
+                  "u": 1316.369,
+                  "v": 144.076
+                },
+                "source": {
+                  "x": 1199.555,
+                  "y": 193.463
+                },
+                "normalizedRadius": 0.708577,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.833508,
+                "localStretch": 0.849627,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 1
+              },
+              {
+                "destination": {
+                  "x": 1521,
+                  "y": 599
+                },
+                "plane": {
+                  "u": 1293.369,
+                  "v": 443.076
+                },
+                "source": {
+                  "x": 1199.702,
+                  "y": 441.199
+                },
+                "normalizedRadius": 0.633279,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.860326,
+                "localStretch": 0.852307,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 1
+              },
+              {
+                "destination": {
+                  "x": 1547,
+                  "y": 899
+                },
+                "plane": {
+                  "u": 1319.369,
+                  "v": 743.076
+                },
+                "source": {
+                  "x": 1199.674,
+                  "y": 688.185
+                },
+                "normalizedRadius": 0.731058,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.825565,
+                "localStretch": 0.829638,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 1
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "pixelCount": 116920,
+            "bbox": {
+              "minX": 13,
+              "minY": 1106,
+              "maxX": 1607,
+              "maxY": 1219
+            },
+            "centroid": {
+              "x": 854.6,
+              "y": 1174.85
+            },
+            "dominantCause": "edge-out-of-frame",
+            "samples": [
+              {
+                "destination": {
+                  "x": 855,
+                  "y": 1175
+                },
+                "plane": {
+                  "u": 627.369,
+                  "v": 1019.076
+                },
+                "source": {
+                  "x": 628.768,
+                  "y": 948.889
+                },
+                "normalizedRadius": 0.588825,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.876056,
+                "localStretch": 0.834704,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 3
+              },
+              {
+                "destination": {
+                  "x": 497,
+                  "y": 1134
+                },
+                "plane": {
+                  "u": 269.369,
+                  "v": 978.076
+                },
+                "source": {
+                  "x": 322.344,
+                  "y": 899.595
+                },
+                "normalizedRadius": 0.66206,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.850068,
+                "localStretch": 0.818587,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 3
+              },
+              {
+                "destination": {
+                  "x": 326,
+                  "y": 1163
+                },
+                "plane": {
+                  "u": 98.369,
+                  "v": 1007.076
+                },
+                "source": {
+                  "x": 199.195,
+                  "y": 899.609
+                },
+                "normalizedRadius": 0.789201,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.805402,
+                "localStretch": 0.786465,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 3
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "pixelCount": 61497,
+            "bbox": {
+              "minX": 0,
+              "minY": 5,
+              "maxX": 80,
+              "maxY": 1219
+            },
+            "centroid": {
+              "x": 31.09,
+              "y": 603.09
+            },
+            "dominantCause": "edge-out-of-frame",
+            "samples": [
+              {
+                "destination": {
+                  "x": 31,
+                  "y": 603
+                },
+                "plane": {
+                  "u": -196.631,
+                  "v": 447.076
+                },
+                "source": {
+                  "x": -27.591,
+                  "y": 444.085
+                },
+                "normalizedRadius": 0.828415,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.792266,
+                "localStretch": 0.779206,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 2
+              },
+              {
+                "destination": {
+                  "x": 0,
+                  "y": 309
+                },
+                "plane": {
+                  "u": -227.631,
+                  "v": 153.076
+                },
+                "source": {
+                  "x": -31.855,
+                  "y": 216.443
+                },
+                "normalizedRadius": 0.897014,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.770564,
+                "localStretch": 0.739907,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 2
+              },
+              {
+                "destination": {
+                  "x": 0,
+                  "y": 612
+                },
+                "plane": {
+                  "u": -227.631,
+                  "v": 456.076
+                },
+                "source": {
+                  "x": -43.982,
+                  "y": 451.107
+                },
+                "normalizedRadius": 0.85912,
+                "validMaxRadius": 1.06,
+                "radialScale": 0.782326,
+                "localStretch": 0.760926,
+                "cause": "edge-out-of-frame",
+                "stage": "render",
+                "regionId": 2
+              }
+            ]
+          }
+        ],
+        "anomalies": [
+          {
+            "destination": {
+              "x": 1544,
+              "y": 300
+            },
+            "plane": {
+              "u": 1316.369,
+              "v": 144.076
+            },
+            "source": {
+              "x": 1199.555,
+              "y": 193.463
+            },
+            "normalizedRadius": 0.708577,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.833508,
+            "localStretch": 0.849627,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          },
+          {
+            "destination": {
+              "x": 1521,
+              "y": 599
+            },
+            "plane": {
+              "u": 1293.369,
+              "v": 443.076
+            },
+            "source": {
+              "x": 1199.702,
+              "y": 441.199
+            },
+            "normalizedRadius": 0.633279,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.860326,
+            "localStretch": 0.852307,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          },
+          {
+            "destination": {
+              "x": 1547,
+              "y": 899
+            },
+            "plane": {
+              "u": 1319.369,
+              "v": 743.076
+            },
+            "source": {
+              "x": 1199.674,
+              "y": 688.185
+            },
+            "normalizedRadius": 0.731058,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.825565,
+            "localStretch": 0.829638,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 1
+          },
+          {
+            "destination": {
+              "x": 855,
+              "y": 1175
+            },
+            "plane": {
+              "u": 627.369,
+              "v": 1019.076
+            },
+            "source": {
+              "x": 628.768,
+              "y": 948.889
+            },
+            "normalizedRadius": 0.588825,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.876056,
+            "localStretch": 0.834704,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 3
+          },
+          {
+            "destination": {
+              "x": 497,
+              "y": 1134
+            },
+            "plane": {
+              "u": 269.369,
+              "v": 978.076
+            },
+            "source": {
+              "x": 322.344,
+              "y": 899.595
+            },
+            "normalizedRadius": 0.66206,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.850068,
+            "localStretch": 0.818587,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 3
+          },
+          {
+            "destination": {
+              "x": 326,
+              "y": 1163
+            },
+            "plane": {
+              "u": 98.369,
+              "v": 1007.076
+            },
+            "source": {
+              "x": 199.195,
+              "y": 899.609
+            },
+            "normalizedRadius": 0.789201,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.805402,
+            "localStretch": 0.786465,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 3
+          },
+          {
+            "destination": {
+              "x": 31,
+              "y": 603
+            },
+            "plane": {
+              "u": -196.631,
+              "v": 447.076
+            },
+            "source": {
+              "x": -27.591,
+              "y": 444.085
+            },
+            "normalizedRadius": 0.828415,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.792266,
+            "localStretch": 0.779206,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 2
+          },
+          {
+            "destination": {
+              "x": 0,
+              "y": 309
+            },
+            "plane": {
+              "u": -227.631,
+              "v": 153.076
+            },
+            "source": {
+              "x": -31.855,
+              "y": 216.443
+            },
+            "normalizedRadius": 0.897014,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.770564,
+            "localStretch": 0.739907,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 2
+          },
+          {
+            "destination": {
+              "x": 0,
+              "y": 612
+            },
+            "plane": {
+              "u": -227.631,
+              "v": 456.076
+            },
+            "source": {
+              "x": -43.982,
+              "y": 451.107
+            },
+            "normalizedRadius": 0.85912,
+            "validMaxRadius": 1.06,
+            "radialScale": 0.782326,
+            "localStretch": 0.760926,
+            "cause": "edge-out-of-frame",
+            "stage": "render",
+            "regionId": 2
+          }
+        ],
+        "anomalyTotals": {
+          "recorded": 9,
+          "dropped": 370992,
+          "byCause": {
+            "edge-out-of-frame": 9
+          }
+        }
+      }
+    },
+    {
+      "stage": "measure",
+      "ok": true,
+      "measurements": {
+        "rmsPx": 0.1169,
+        "maxPx": 0.9243,
+        "count": 113,
+        "excludedClipped": 1,
+        "thresholds": {
+          "markerRmsPx": 0.8,
+          "markerMaxPx": 2.2
+        },
+        "topPoints": [
+          {
+            "ideal": {
+              "x": 84,
+              "y": 1008
+            },
+            "errorPx": 0.9243
+          },
+          {
+            "ideal": {
+              "x": -84,
+              "y": 504
+            },
+            "errorPx": 0.2427
+          },
+          {
+            "ideal": {
+              "x": -84,
+              "y": 0
+            },
+            "errorPx": 0.2282
+          },
+          {
+            "ideal": {
+              "x": 1176,
+              "y": -84
+            },
+            "errorPx": 0.1788
+          },
+          {
+            "ideal": {
+              "x": -84,
+              "y": 168
+            },
+            "errorPx": 0.1772
+          },
+          {
+            "ideal": {
+              "x": -84,
+              "y": 336
+            },
+            "errorPx": 0.1633
+          },
+          {
+            "ideal": {
+              "x": 504,
+              "y": 924
+            },
+            "errorPx": 0.1347
+          },
+          {
+            "ideal": {
+              "x": 840,
+              "y": 924
+            },
+            "errorPx": 0.1186
+          }
+        ],
+        "units": "source-pixel"
+      }
+    }
+  ],
+  "logBudget": {
+    "maxAnomalies": 48,
+    "maxRegions": 8,
+    "samplesPerRegion": 3,
+    "anomaliesRecorded": 9,
+    "anomaliesDropped": 370992,
+    "regionsRecorded": 3,
+    "regionsDropped": 0,
+    "truncated": true
+  }
+}

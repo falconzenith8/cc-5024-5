@@ -23,6 +23,7 @@ try {
     errors: document.getElementById('errorSummary')?.innerText,
     bend: document.getElementById('bendSummary')?.innerText,
     invalid: document.getElementById('invalidBox')?.innerText,
+    diagnosis: document.getElementById('diagnosisBox')?.innerText,
     fit: document.getElementById('fitBox')?.innerText,
     distorted: [document.getElementById('distortedCanvas')?.width, document.getElementById('distortedCanvas')?.height],
     rectified: [document.getElementById('rectifiedCanvas')?.width, document.getElementById('rectifiedCanvas')?.height],
@@ -122,6 +123,7 @@ try {
       const afterDrag = await page.evaluate(() => ({
         errors: document.getElementById('errorSummary')?.innerText,
         fit: document.getElementById('fitBox')?.innerText,
+        diagnosis: document.getElementById('diagnosisBox')?.innerText,
         pointInfo: document.getElementById('pointInfo')?.innerText,
         verdict: document.getElementById('verdict')?.textContent,
       }));
@@ -145,6 +147,8 @@ try {
   await page.locator('#btnExportCal').click();
   await page.waitForTimeout(1500);
   await page.locator('#btnExportEval').click();
+  await page.waitForTimeout(9000);
+  await page.locator('#btnExportDiag').click();
   await page.waitForTimeout(9000);
   log('=== DOWNLOADS ===');
   log(JSON.stringify(downloads, null, 2));

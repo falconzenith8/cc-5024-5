@@ -23,6 +23,7 @@ import { planOutput } from '../src/core/projection.js';
 import { renderRectified, overlayInvalidMask } from '../src/core/render.js';
 import { adaptCalibrationToSize, describeResolutionRelation, validateCalibration, formatCalibration } from '../src/core/calibration.js';
 import { distortedToUndistorted, buildReverseMap, undistortedToDistorted } from '../src/core/model.js';
+import { diagnoseRectification } from '../src/core/diagnosis.js';
 import { resizeRgba } from '../src/core/png.js';
 import { readPng, writePng, readJson, writeJson } from '../src/node/png-node.js';
 
@@ -34,10 +35,15 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith('--')) {
-      const key = a.slice(2);
+      const body = a.slice(2);
+      const eq = body.indexOf('=');
+      if (eq >= 0) {
+        args[body.slice(0, eq)] = body.slice(eq + 1);
+        continue;
+      }
       const next = argv[i + 1];
-      if (!next || next.startsWith('--')) args[key] = true;
-      else { args[key] = next; i++; }
+      if (!next || next.startsWith('--')) args[body] = true;
+      else { args[body] = next; i++; }
     } else {
       args._.push(a);
     }
@@ -311,6 +317,25 @@ async function cmdEvaluate(args) {
     },
   };
   await writeJson(resolve(outDir, 'evaluation.json'), report);
+  const diagnosis = diagnoseRectification({
+    calibration: fit.calibration,
+    sourceWidth: scene.width,
+    sourceHeight: scene.height,
+    mode,
+    plan,
+    rect: rectified,
+    evaluation: {
+      coordinateResidual: evaluation.coordinateResidual,
+      thresholds: scene.thresholds,
+      units: 'source-pixel',
+    },
+  });
+  await writeJson(resolve(outDir, 'diagnosis.json'), {
+    generatedAt: report.generatedAt,
+    mode,
+    referenceResolution: { width: scene.width, height: scene.height },
+    ...diagnosis,
+  });
   await writeJson(resolve(outDir, 'mapping-probes.json'), report.mappingProbes);
   await writeJson(resolve(outDir, 'resolution-adaptation.json'), {
     native: describeResolutionRelation(fit.calibration, scene.width, scene.height),
@@ -349,6 +374,8 @@ async function cmdEvaluate(args) {
   console.log(`        最大: ${fmt(e.lineBending.distorted.maxPx)} px → ${fmt(e.lineBending.rectified.maxSourcePx)} px`);
   console.log(`输出 ${plan.width}×${plan.height}, 有效像素 ${(rectified.stats.validFraction * 100).toFixed(2)}%, 越界 ${rectified.stats.outOfFrame}, 模型外 ${rectified.stats.outsideModel}`);
   console.log(`映射探针 ${report.mappingProbes.length} 个 -> mapping-probes.json`);
+  console.log(`诊断: ${diagnosis.summary} -> diagnosis.json`);
+  for (const c of diagnosis.causes) console.log(`  [${c.stage}] ${c.severity}: ${c.summary}`);
   console.log(`判定: ${e.pass ? 'PASS' : 'FAIL'} ${JSON.stringify(e.checks)}`);
   for (const w of plan.warnings) console.log(`提示: ${w.message}`);
   console.log(`产物目录 ${outDir}`);
@@ -403,6 +430,114 @@ function fmt(v) {
   return v == null || !Number.isFinite(v) ? 'n/a' : v.toFixed(4);
 }
 
+/**
+ * Distortion diagnosis: edge-anomaly tracking with a stage-located evidence
+ * chain. Inputs are mandatory as a pair — a missing image or calibration is
+ * an error, never patched over with defaults. With no inputs at all the
+ * command runs the explicitly-chosen built-in synthetic scene.
+ */
+async function cmdDiagnose(args) {
+  const outDir = resolve(args.out || DEFAULT_DIR);
+  const mode = args.mode === 'crop' ? 'crop' : 'preserve-field';
+  const limits = {};
+  if (args['max-anomalies'] !== undefined) {
+    const n = Number(args['max-anomalies']);
+    if (!Number.isInteger(n) || n < 1 || n > 10000) {
+      throw new Error(`--max-anomalies 必须是 1..10000 的整数，收到 ${JSON.stringify(args['max-anomalies'])}`);
+    }
+    limits.maxAnomalies = n;
+  }
+  const hasImage = Boolean(args.image);
+  const hasCal = Boolean(args.calibration);
+  if (hasImage !== hasCal) {
+    throw new Error('--image 与 --calibration 必须同时提供；缺少的输入不会用默认值顶替');
+  }
+
+  let source;
+  let cal;
+  let inputLabel;
+  if (hasImage) {
+    const img = await readPng(resolve(args.image));
+    const raw = await readJson(resolve(args.calibration));
+    if (!raw || typeof raw !== 'object' || !raw.distortion) {
+      throw new Error('标定文件缺少 distortion，无法诊断（不会用内置参数顶替）');
+    }
+    cal = raw.intrinsics ? raw : {
+      model: raw.model,
+      intrinsics: {
+        referenceWidth: raw.referenceResolution?.width, referenceHeight: raw.referenceResolution?.height,
+        fx: raw.fx, fy: raw.fy, cx: raw.cx, cy: raw.cy,
+      },
+      distortion: raw.distortion,
+      projection: raw.projection || { mode, fillColor: [16, 20, 28, 255] },
+    };
+    if (!cal.intrinsics.referenceWidth || !cal.intrinsics.referenceHeight) {
+      throw new Error('标定文件缺少参考分辨率（intrinsics/referenceResolution），无法诊断');
+    }
+    if (cal.intrinsics.referenceWidth !== img.width || cal.intrinsics.referenceHeight !== img.height) {
+      console.log(`[diagnose] ${describeResolutionRelation(cal, img.width, img.height).message}`);
+      cal = adaptCalibrationToSize(cal, img.width, img.height);
+    }
+    validateCalibration(cal);
+    source = img;
+    inputLabel = `${args.image} + ${args.calibration}`;
+  } else {
+    console.log('[diagnose] 未提供 --image/--calibration，显式使用内置合成场景（真值已知，用于自检）');
+    const scene = makeDefaultScene();
+    const generated = generateDistortedImage(scene.calibration, scene.grid);
+    const detected = detectMarkers(generated.rgba, generated.width, generated.height);
+    const pairs = matchPoints(detected, scene.visibleMarkers.map((p) => p.observed), 16);
+    if (pairs.length < 8) throw new Error(`内置场景检测到的对应点不足（${pairs.length}），无法诊断`);
+    const usedD = new Set();
+    const usedT = new Set();
+    const fitPoints = [];
+    for (const p of pairs) {
+      if (usedD.has(p.detected) || usedT.has(p.expected)) continue;
+      usedD.add(p.detected);
+      usedT.add(p.expected);
+      fitPoints.push({
+        ideal: scene.visibleMarkers[p.expected].ideal,
+        observed: { x: detected[p.detected].x, y: detected[p.detected].y },
+      });
+    }
+    const fit = fitCalibration(fitPoints, makeApproximateCalibration(scene), { freeFocal: false });
+    cal = fit.calibration;
+    validateCalibration(cal);
+    source = generated;
+    inputLabel = '内置合成场景';
+  }
+
+  const plan = planOutput(cal, source.width, source.height, mode, { padding: 0 });
+  const rect = renderRectified(source.rgba, source.width, source.height, plan, cal.distortion, {
+    sampling: 'bilinear',
+    fillColor: cal.projection?.fillColor,
+  });
+  const diagnosis = diagnoseRectification({
+    calibration: cal,
+    sourceWidth: source.width,
+    sourceHeight: source.height,
+    mode,
+    plan,
+    rect,
+    limits,
+  });
+  await ensureDir(outDir);
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    input: inputLabel,
+    mode,
+    image: { width: source.width, height: source.height },
+    calibration: formatCalibration(cal),
+    ...diagnosis,
+  };
+  await writeJson(resolve(outDir, 'diagnosis.json'), payload);
+  console.log(`[diagnose] 输入 ${inputLabel}，输出 ${plan.width}×${plan.height}（${mode}）`);
+  console.log(`[diagnose] ${diagnosis.summary}`);
+  for (const c of diagnosis.causes) console.log(`  [${c.stage}] ${c.severity}: ${c.summary}`);
+  console.log(`[diagnose] 写入 ${resolve(outDir, 'diagnosis.json')}`);
+  if (diagnosis.verdict === 'broken') process.exitCode = 2;
+}
+
 async function main() {
   const argv = process.argv.slice(2);
   const args = parseArgs(argv);
@@ -412,6 +547,7 @@ async function main() {
     else if (cmd === 'evaluate') await cmdEvaluate(args);
     else if (cmd === 'all') { await cmdGenerate(args); await cmdEvaluate(args); }
     else if (cmd === 'inspect') await cmdInspect(args);
+    else if (cmd === 'diagnose') await cmdDiagnose(args);
     else if (cmd === 'adapt') {
       const p = args.calibration;
       if (!p) throw new Error('用法: adapt --calibration <json> --width W --height H');
@@ -424,7 +560,7 @@ async function main() {
       console.log(describeResolutionRelation(cal, w, h).message);
       console.log(`写入 ${out}`);
     } else {
-      console.log('命令: generate | evaluate | all | inspect | adapt');
+      console.log('命令: generate | evaluate | all | inspect | diagnose | adapt');
       process.exitCode = 1;
     }
   } catch (err) {

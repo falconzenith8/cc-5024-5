@@ -33,6 +33,7 @@
       <button id="btnExportCal" class="btn">导出参数 JSON</button>
       <button id="btnExportPoints" class="btn">导出对应点</button>
       <button id="btnExportEval" class="btn">导出评估 JSON</button>
+      <button id="btnExportDiag" class="btn">导出诊断 JSON</button>
     </div>
   </header>
 
@@ -211,6 +212,11 @@
           <div class="section-title">无效区域与越界</div>
           <div id="invalidBox" class="kvbox">尚无统计。</div>
           <canvas id="invalidPlot" class="plot small" width="640" height="150"></canvas>
+        </div>
+
+        <div class="section">
+          <div class="section-title">畸变诊断 <span class="hint">边缘异常追踪 · 阶段证据链</span></div>
+          <div id="diagnosisBox" class="kvbox">尚无诊断。</div>
         </div>
 
         <div class="section">

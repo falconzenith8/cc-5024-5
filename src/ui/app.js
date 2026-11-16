@@ -22,6 +22,7 @@ import {
 import {
   detectMarkers, matchPoints, fitCalibration, measureLineBending, sampleRgba,
 } from '../core/analysis.js';
+import { diagnoseRectification } from '../core/diagnosis.js';
 import { encodePng } from '../core/png.js';
 
 const $ = (id) => document.getElementById(id);
@@ -51,6 +52,7 @@ const state = {
   overlayPreview: null,
   errors: null,
   bend: null,
+  diagnosis: null,
   probe: null,
   probeMode: null,
   verdict: 'idle',
@@ -177,6 +179,7 @@ async function loadSample() {
     state.fit = null;
     state.errors = null;
     state.bend = null;
+    state.diagnosis = null;
     state.planPreview = null;
     state.selected = -1;
     $('imageMeta').textContent = `${gen.width}×${gen.height} · 合成图`;
@@ -506,6 +509,33 @@ async function recompute({ fit = false, reason = '' } = {}) {
     }
     if (id !== state.jobSeq) return;
 
+    try {
+      state.diagnosis = diagnoseRectification({
+        calibration: pcal,
+        sourceWidth: hold.width,
+        sourceHeight: hold.height,
+        mode: state.mode,
+        plan,
+        rect,
+        evaluation: {
+          coordinateResidual: state.errors?.independent ? {
+            rmsPx: state.errors.rmsPx,
+            maxPx: state.errors.maxPx,
+            count: state.errors.count,
+            excludedClipped: state.errors.excludedClipped,
+            points: state.errors.points,
+          } : null,
+          thresholds: state.grid?.thresholds || null,
+          units: 'source-pixel',
+        },
+        inverse: state.solver,
+        limits: { reverseMapGrid: 96 },
+      });
+    } catch (e) {
+      state.diagnosis = { error: e.message };
+    }
+    if (id !== state.jobSeq) return;
+
     state.verdict = computeVerdict();
     renderUi();
     if (fit) syncCalibrationInputs();
@@ -738,6 +768,7 @@ function renderUi() {
   renderErrors();
   renderBend();
   renderInvalid();
+  renderDiagnosis();
   renderFitBox();
   drawCanvases();
   renderProbesTable();
@@ -986,6 +1017,66 @@ function renderInvalid() {
     '<div class="micro">红色边界=无效区域；填充色由参数 projection.fillColor 决定，不参与后续统计。</div>',
   ].join('');
   drawInvalidPlot(canvas, rect, state.planPreview);
+}
+
+function renderDiagnosis() {
+  const el = $('diagnosisBox');
+  const d = state.diagnosis;
+  if (!d) {
+    el.textContent = '尚无诊断。';
+    return;
+  }
+  if (d.error) {
+    el.textContent = `诊断失败：${d.error}`;
+    return;
+  }
+  const stageOf = (name) => d.evidenceChain.find((s) => s.stage === name);
+  const render = stageOf('render');
+  const model = stageOf('model');
+  const rmap = stageOf('reverse-map');
+  const measure = stageOf('measure');
+  const verdictText = { ok: '未发现异常原因', attention: '需注意', broken: '存在严重异常' }[d.verdict] || d.verdict;
+  const verdictCls = { ok: 'ok', attention: 'warn', broken: 'bad' }[d.verdict] || '';
+  const rows = [kvRow('诊断结论', `${verdictText}（${d.causes.length} 个原因）`, verdictCls)];
+  for (const c of d.causes) {
+    rows.push(`<div class="row"><span class="k">阶段 ${escapeHtml(c.stage)}</span><span class="v ${c.severity === 'info' ? '' : c.severity === 'warn' ? 'warn' : 'bad'}">${escapeHtml(c.summary)}</span></div>`);
+  }
+  if (render) {
+    const m = render.measurements;
+    rows.push(kvRow(
+      '失败区域（render）',
+      `${m.regionCount} 个 · 无效 ${m.invalid.toLocaleString()} px（越界 ${m.outOfFrame.toLocaleString()} / 模型外 ${m.outsideModel.toLocaleString()} / 非有限 ${m.nonFinite}）`,
+      m.nonFinite ? 'bad' : m.invalid ? 'warn' : 'ok',
+    ));
+    const tracked = m.anomalies.slice(0, 4).map((a) => {
+      const src = a.source.x == null ? '—' : `(${a.source.x}, ${a.source.y})`;
+      return `输出(${a.destination.x},${a.destination.y})→源${src} r=${a.normalizedRadius} 拉伸=${a.localStretch} [${a.cause}]`;
+    });
+    for (const t of tracked) rows.push(`<div class="micro">${escapeHtml(t)}</div>`);
+  }
+  if (rmap) {
+    const m = rmap.measurements;
+    rows.push(kvRow(
+      '求逆状态（reverse-map）',
+      `收敛 ${m.converged} · 耗尽 ${m.iterationsExhausted} · 停滞 ${m.stalled} · 发散 ${m.diverged} · 最大迭代 ${m.maxIterations} · 最大残差 ${m.maxResidual}`,
+      m.diverged || m.iterationsExhausted ? 'warn' : 'ok',
+    ));
+  }
+  if (model) {
+    const m = model.measurements;
+    rows.push(kvRow(
+      '径向探针（model）',
+      `角半径 ${m.cornerRadius} / 有效 ${m.validMaxRadius} · 帧内覆盖 ${(m.frameInsideModelFraction * 100).toFixed(1)}% · 回环最大误差 ${m.roundTrip.maxError}`,
+      m.frameInsideModelFraction < 0.5 ? 'bad' : 'ok',
+    ));
+  }
+  if (measure && !measure.measurements.skipped && measure.measurements.rmsPx != null) {
+    const m = measure.measurements;
+    rows.push(kvRow('坐标残差（measure）', `RMS ${m.rmsPx} px · 最大 ${m.maxPx} px · n=${m.count}`, 'ok'));
+  }
+  const b = d.logBudget;
+  rows.push(`<div class="micro">日志预算：异常记录 ${b.anomaliesRecorded}/${b.maxAnomalies} 条、区域 ${b.regionsRecorded}/${b.maxRegions} 个；预算外丢弃异常 ${b.anomaliesDropped}、区域 ${b.regionsDropped}（只计数不展开，控制日志成本）。诊断只读取光栅，不涂补失败像素。</div>`);
+  el.innerHTML = rows.join('');
 }
 
 function renderProbesTable() {
@@ -1737,6 +1828,7 @@ function setupButtons() {
   $('btnExportPng').addEventListener('click', exportPng);
   $('btnExportCal').addEventListener('click', exportCalibration);
   $('btnExportEval').addEventListener('click', exportEvaluation);
+  $('btnExportDiag').addEventListener('click', exportDiagnosis);
   const btnPoints = $('btnExportPoints');
   if (btnPoints) btnPoints.addEventListener('click', exportPoints);
 }
@@ -1784,6 +1876,38 @@ async function renderFullRes(reason) {
     fillColor: state.calibration.projection.fillColor || [16, 20, 28, 255],
   });
   return { plan, rect };
+}
+
+/** Coordinate residuals re-measured on a full-resolution rectified raster. */
+function measureFullResCoordResidual(plan, rect) {
+  if (!state.grid) return null;
+  const detections = detectMarkers(rect.rgba, rect.width, rect.height);
+  const areas = detections.map((d) => d.area).sort((a, b) => a - b);
+  const medianArea = areas.length ? areas[areas.length >> 1] : 0;
+  const complete = detections.filter((d) => d.bbox.minX > 0 && d.bbox.minY > 0 && d.bbox.maxX < rect.width - 1 && d.bbox.maxY < rect.height - 1 && d.area >= medianArea * 0.55);
+  const expected = state.grid.markers.map((m) => ({ ideal: m, x: (m.x - plan.offsetX) / plan.stepX, y: (m.y - plan.offsetY) / plan.stepY }))
+    .filter((m) => m.x > 10 && m.y > 10 && m.x < rect.width - 11 && m.y < rect.height - 11);
+  const pairs = matchPoints(complete, expected, 14);
+  const usedD = new Set();
+  const usedE = new Set();
+  const points = [];
+  for (const pr of pairs) {
+    if (usedD.has(pr.detected) || usedE.has(pr.expected)) continue;
+    usedD.add(pr.detected); usedE.add(pr.expected);
+    const det = complete[pr.detected];
+    const exp = expected[pr.expected];
+    const dx = plan.offsetX + det.x * plan.stepX - exp.ideal.x;
+    const dy = plan.offsetY + det.y * plan.stepY - exp.ideal.y;
+    points.push({ ideal: exp.ideal, errorPx: Math.hypot(dx, dy), dx, dy });
+  }
+  if (!points.length) return null;
+  return {
+    count: points.length,
+    excludedClipped: detections.length - complete.length,
+    rmsPx: Math.sqrt(points.reduce((s, p) => s + p.errorPx * p.errorPx, 0) / points.length),
+    maxPx: Math.max(...points.map((p) => p.errorPx)),
+    points,
+  };
 }
 
 async function exportPng() {
@@ -1858,37 +1982,7 @@ async function exportEvaluation() {
     const { plan, rect } = await renderFullRes();
     const fullCal = state.calibration;
     const intr = getIntrinsicsAtSize(fullCal, state.source.width, state.source.height);
-    const detections = detectMarkers(rect.rgba, rect.width, rect.height);
-    const areas = detections.map((d) => d.area).sort((a, b) => a - b);
-    const medianArea = areas.length ? areas[areas.length >> 1] : 0;
-    const complete = detections.filter((d) => d.bbox.minX > 0 && d.bbox.minY > 0 && d.bbox.maxX < rect.width - 1 && d.bbox.maxY < rect.height - 1 && d.area >= medianArea * 0.55);
-    let coord = null;
-    if (state.grid) {
-      const expected = state.grid.markers.map((m) => ({ ideal: m, x: (m.x - plan.offsetX) / plan.stepX, y: (m.y - plan.offsetY) / plan.stepY }))
-        .filter((m) => m.x > 10 && m.y > 10 && m.x < rect.width - 11 && m.y < rect.height - 11);
-      const pairs = matchPoints(complete, expected, 14);
-      const usedD = new Set();
-      const usedE = new Set();
-      const points = [];
-      for (const pr of pairs) {
-        if (usedD.has(pr.detected) || usedE.has(pr.expected)) continue;
-        usedD.add(pr.detected); usedE.add(pr.expected);
-        const det = complete[pr.detected];
-        const exp = expected[pr.expected];
-        const dx = plan.offsetX + det.x * plan.stepX - exp.ideal.x;
-        const dy = plan.offsetY + det.y * plan.stepY - exp.ideal.y;
-        points.push({ ideal: exp.ideal, errorPx: Math.hypot(dx, dy), dx, dy });
-      }
-      if (points.length) {
-        coord = {
-          count: points.length,
-          excludedClipped: detections.length - complete.length,
-          rmsPx: Math.sqrt(points.reduce((s, p) => s + p.errorPx * p.errorPx, 0) / points.length),
-          maxPx: Math.max(...points.map((p) => p.errorPx)),
-          points,
-        };
-      }
-    }
+    const coord = measureFullResCoordResidual(plan, rect);
     // Fit residual recomputed on current correspondence set at full resolution.
     const fitPoints = state.points.map((p) => ({ ideal: p.ideal, observed: p.observed }));
     const fitResiduals = fitPoints.map((p) => {
@@ -1964,6 +2058,42 @@ async function exportEvaluation() {
   } catch (err) {
     setProgress(false);
     setError([`评估导出失败：${err.message}`]);
+  }
+}
+
+async function exportDiagnosis() {
+  try {
+    setProgress(true, '按原始分辨率诊断…');
+    await yieldToUi();
+    const { plan, rect } = await renderFullRes();
+    const coord = measureFullResCoordResidual(plan, rect);
+    const diagnosis = diagnoseRectification({
+      calibration: state.calibration,
+      sourceWidth: state.source.width,
+      sourceHeight: state.source.height,
+      mode: state.mode,
+      plan,
+      rect,
+      evaluation: {
+        coordinateResidual: coord,
+        thresholds: state.grid?.thresholds || null,
+        units: 'source-pixel',
+      },
+      inverse: state.solver,
+    });
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      source: { name: state.source.name, width: state.source.width, height: state.source.height },
+      mode: state.mode,
+      calibration: formatCalibration(state.calibration),
+      ...diagnosis,
+    };
+    download(`wideangle-diagnosis-${new Date().toISOString().replace(/[:.]/g, '-')}.json`, JSON.stringify(payload, null, 2));
+    $('renderNote').textContent = `已导出全分辨率诊断 JSON：${diagnosis.summary}`;
+    setProgress(false);
+  } catch (err) {
+    setProgress(false);
+    setError([`诊断导出失败：${err.message}`]);
   }
 }
 
