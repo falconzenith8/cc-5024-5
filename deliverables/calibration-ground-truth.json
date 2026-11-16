@@ -1,0 +1,33 @@
+{
+  "model": "brown-conrady",
+  "reference": "1200×900",
+  "intrinsics": {
+    "referenceWidth": 1200,
+    "referenceHeight": 900,
+    "fx": 1020,
+    "fy": 1020,
+    "cx": 648,
+    "cy": 418.5
+  },
+  "distortion": {
+    "k1": -0.42,
+    "k2": 0.19,
+    "k3": -0.028,
+    "p1": 0.004,
+    "p2": -0.003,
+    "validMaxNormalizedRadius": 1.06,
+    "modelConfig": {
+      "radialOrder": 6,
+      "tangential": true
+    }
+  },
+  "projection": {
+    "mode": "preserve-field",
+    "fillColor": [
+      16,
+      20,
+      28,
+      255
+    ]
+  }
+}

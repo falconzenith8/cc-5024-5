@@ -1,0 +1,20 @@
+{
+  "width": 1480,
+  "height": 794,
+  "cols": 3,
+  "cell": {
+    "width": 480,
+    "height": 360,
+    "pad": 10,
+    "label": 22
+  },
+  "labels": [
+    "distorted",
+    "detected markers",
+    "distorted + ideal grid",
+    "rectified",
+    "rectified + ideal grid",
+    "invalid mask overlay"
+  ],
+  "note": "按行排列；每个单元格左上角为对应标签。"
+}

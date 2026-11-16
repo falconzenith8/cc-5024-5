@@ -1,0 +1,377 @@
+[
+  {
+    "destination": {
+      "x": 0,
+      "y": 0
+    },
+    "undistorted": {
+      "x": -227.6311606278715,
+      "y": -155.92398986968544
+    },
+    "source": {
+      "x": 0.008657333843984816,
+      "y": -0.19670528200583703
+    },
+    "normalizedRadius": 1.0267730670308797,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": -227.58630511521983,
+      "y": -155.61634645750678,
+      "iterations": 56,
+      "residual": 8.868879087051094e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 402,
+      "y": 0
+    },
+    "undistorted": {
+      "x": 174.3688393721285,
+      "y": -155.92398986968544
+    },
+    "source": {
+      "x": 255.975420268508,
+      "y": -52.79369285711476
+    },
+    "normalizedRadius": 0.7300785686561635,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 373.5377375476718,
+      "y": -51.392323220622075,
+      "iterations": 18,
+      "residual": 5.285628835731356e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 804,
+      "y": 0
+    },
+    "undistorted": {
+      "x": 576.3688393721285,
+      "y": -155.92398986968544
+    },
+    "source": {
+      "x": 584.0188322119733,
+      "y": -85.33124864039877
+    },
+    "normalizedRadius": 0.5678238644935881,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 820.7871732278724,
+      "y": -43.970067296947946,
+      "iterations": 16,
+      "residual": 4.7020452598572374e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 1205,
+      "y": 0
+    },
+    "undistorted": {
+      "x": 977.3688393721285,
+      "y": -155.92398986968544
+    },
+    "source": {
+      "x": 926.0899158335621,
+      "y": -67.01671903089681
+    },
+    "normalizedRadius": 0.6495046223706681,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 1384.3602282890943,
+      "y": -136.68072267822686,
+      "iterations": 44,
+      "residual": 8.459367341215906e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 1607,
+      "y": 0
+    },
+    "undistorted": {
+      "x": 1379.3688393721286,
+      "y": -155.92398986968544
+    },
+    "source": {
+      "x": 1199.4202235384296,
+      "y": -13.194750169707731
+    },
+    "normalizedRadius": 0.9120348558859375,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 2053.518456050476,
+      "y": -203.7758875593131,
+      "iterations": 60,
+      "residual": 0.005481809640747058,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 0,
+      "y": 610
+    },
+    "undistorted": {
+      "x": -227.6311606278715,
+      "y": 454.07601013031456
+    },
+    "source": {
+      "x": -43.99088975408495,
+      "y": 449.5310327672545
+    },
+    "normalizedRadius": 0.8590393485861679,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": -159.3207942304058,
+      "y": 654.3862000077357,
+      "iterations": 34,
+      "residual": 8.18403895973106e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 402,
+      "y": 610
+    },
+    "undistorted": {
+      "x": 174.3688393721285,
+      "y": 454.07601013031456
+    },
+    "source": {
+      "x": 211.29658591831844,
+      "y": 452.14113086251655
+    },
+    "normalizedRadius": 0.4655108888633876,
+    "valid": true,
+    "invalidReason": null,
+    "inverseAtDestination": {
+      "x": 392.8015638055978,
+      "y": 616.9816442271995,
+      "iterations": 9,
+      "residual": 5.166862496322864e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 804,
+      "y": 610
+    },
+    "undistorted": {
+      "x": 576.3688393721285,
+      "y": 454.07601013031456
+    },
+    "source": {
+      "x": 576.4844791706196,
+      "y": 454.03424291737684
+    },
+    "normalizedRadius": 0.0781640091588284,
+    "valid": true,
+    "invalidReason": null,
+    "inverseAtDestination": {
+      "x": 808.1211453200164,
+      "y": 614.5622729877673,
+      "iterations": 7,
+      "residual": 5.995529690484525e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 1205,
+      "y": 610
+    },
+    "undistorted": {
+      "x": 977.3688393721285,
+      "y": 454.07601013031456
+    },
+    "source": {
+      "x": 962.586410921137,
+      "y": 452.94886852458797
+    },
+    "normalizedRadius": 0.3248721682757894,
+    "valid": true,
+    "invalidReason": null,
+    "inverseAtDestination": {
+      "x": 1314.4380630209832,
+      "y": 644.7024071713845,
+      "iterations": 26,
+      "residual": 8.124927889534971e-8,
+      "status": "converged",
+      "reason": "tolerance"
+    }
+  },
+  {
+    "destination": {
+      "x": 1607,
+      "y": 610
+    },
+    "undistorted": {
+      "x": 1379.3688393721286,
+      "y": 454.07601013031456
+    },
+    "source": {
+      "x": 1250.682103700945,
+      "y": 450.0023264358888
+    },
+    "normalizedRadius": 0.7179785857462821,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 2047.0016855769225,
+      "y": 684.7479195558136,
+      "iterations": 60,
+      "residual": 0.000933916220161628,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 0,
+      "y": 1219
+    },
+    "undistorted": {
+      "x": -227.6311606278715,
+      "y": 1063.0760101303144
+    },
+    "source": {
+      "x": -0.9368465442461229,
+      "y": 898.26081810264
+    },
+    "normalizedRadius": 1.0656906920092042,
+    "valid": false,
+    "invalidReason": "outside-model",
+    "inverseAtDestination": {
+      "x": -256.75449281182387,
+      "y": 1535.4024379073385,
+      "iterations": 60,
+      "residual": 0.0008404405622569752,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 402,
+      "y": 1219
+    },
+    "undistorted": {
+      "x": 174.3688393721285,
+      "y": 1063.0760101303144
+    },
+    "source": {
+      "x": 260.15955037045376,
+      "y": 946.2733824556533
+    },
+    "normalizedRadius": 0.783867613992369,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 314.92258417179056,
+      "y": 1512.4745733853954,
+      "iterations": 60,
+      "residual": 5.228883870639962e-7,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 804,
+      "y": 1219
+    },
+    "undistorted": {
+      "x": 576.3688393721285,
+      "y": 1063.0760101303144
+    },
+    "source": {
+      "x": 584.8117780161798,
+      "y": 977.6354779888657
+    },
+    "normalizedRadius": 0.6354979629735172,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 866.884629920119,
+      "y": 1509.5677738873787,
+      "iterations": 60,
+      "residual": 2.2752299800005703e-7,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 1205,
+      "y": 1219
+    },
+    "undistorted": {
+      "x": 977.3688393721285,
+      "y": 1063.0760101303144
+    },
+    "source": {
+      "x": 921.8873845522173,
+      "y": 959.56838161379
+    },
+    "normalizedRadius": 0.7094293300505141,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 1452.053415649915,
+      "y": 1551.7788574049525,
+      "iterations": 60,
+      "residual": 0.00041694883274762926,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  },
+  {
+    "destination": {
+      "x": 1607,
+      "y": 1219
+    },
+    "undistorted": {
+      "x": 1379.3688393721286,
+      "y": 1063.0760101303144
+    },
+    "source": {
+      "x": 1196.925824549726,
+      "y": 908.4565534658227
+    },
+    "normalizedRadius": 0.9556365931701966,
+    "valid": false,
+    "invalidReason": "out-of-frame",
+    "inverseAtDestination": {
+      "x": 1994.0237095817051,
+      "y": 1515.6849992504256,
+      "iterations": 60,
+      "residual": 0.04428888258504183,
+      "status": "iterations-exhausted",
+      "reason": "budget"
+    }
+  }
+]

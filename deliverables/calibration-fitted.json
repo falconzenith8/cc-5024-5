@@ -1,0 +1,60 @@
+{
+  "model": "brown-conrady",
+  "reference": "1200×900",
+  "intrinsics": {
+    "referenceWidth": 1200,
+    "referenceHeight": 900,
+    "fx": 1020,
+    "fy": 1020,
+    "cx": 647.879589,
+    "cy": 418.824721
+  },
+  "distortion": {
+    "k1": -0.4201676465829782,
+    "k2": 0.19064037034965203,
+    "k3": -0.028374775287231587,
+    "p1": 0.0039042581640257395,
+    "p2": -0.0029600003712656016,
+    "validMaxNormalizedRadius": 1.06,
+    "modelConfig": {
+      "radialOrder": 6,
+      "tangential": true
+    }
+  },
+  "projection": {
+    "mode": "preserve-field",
+    "fillColor": [
+      16,
+      20,
+      28,
+      255
+    ]
+  },
+  "fit": {
+    "method": "levenberg-marquardt",
+    "pointCount": 108,
+    "inputPointCount": 108,
+    "freeParameters": [
+      "cx",
+      "cy",
+      "k1",
+      "k2",
+      "k3",
+      "p1",
+      "p2"
+    ],
+    "focalFixed": true,
+    "iterations": 14,
+    "status": "converged",
+    "rmsPx": 0.06476770331009381,
+    "maxPx": 0.1528125742086261,
+    "cost": 0.4530443823429483,
+    "outliers": [],
+    "outlierCount": 0,
+    "note": "焦距由标定文件固定；仅拟合主点、径向与切向系数（径向项只以 k/f² 等组合影响像素映射）"
+  },
+  "referenceResolution": {
+    "width": 1200,
+    "height": 900
+  }
+}

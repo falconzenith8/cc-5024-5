@@ -1,0 +1,22 @@
+{
+  "name": "wideangle-rectifier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Wide-angle photo rectification with explicit Brown-Conrady radial/tangential model, bidirectional mapping, and measured grid evaluation.",
+  "scripts": {
+    "start": "node src/node/serve.mjs",
+    "app": "node src/node/serve.mjs",
+    "demo": "node tools/wideangle-cli.mjs all",
+    "evaluate": "node tools/wideangle-cli.mjs evaluate",
+    "generate": "node tools/wideangle-cli.mjs generate",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "node tools/dev/ui-check.mjs /tmp/ui-verify"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.1"
+  }
+}

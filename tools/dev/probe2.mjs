@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ executablePath: '/home/node/.cache/ms-playwright/chromium_headless_shell-1148/chrome-linux/headless_shell', args: ['--no-sandbox'] });
+const page = await browser.newPage();
+page.on('console', m => console.log('CONSOLE', m.type(), m.text()));
+page.on('pageerror', e => console.log('PAGEERROR', e.message, e.stack?.split('\n')[1]));
+page.on('request', r => console.log('REQ', r.resourceType(), r.url()));
+page.on('response', r => console.log('RES', r.status(), r.url(), r.headers()['content-type']));
+await page.goto('http://127.0.0.1:5178/');
+await page.waitForTimeout(3000);
+const has = await page.evaluate(() => ({ boot: typeof window.__appBooted, btn: !!document.getElementById('btnLoadSample'), canvasW: document.getElementById('distortedCanvas').width }));
+console.log('HAS', has);
+await browser.close();

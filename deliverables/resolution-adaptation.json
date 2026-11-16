@@ -1,0 +1,112 @@
+{
+  "native": {
+    "native": true,
+    "reference": {
+      "width": 1200,
+      "height": 900
+    },
+    "input": {
+      "width": 1200,
+      "height": 900
+    },
+    "scale": {
+      "x": 1,
+      "y": 1
+    },
+    "message": "输入分辨率与标定参考分辨率一致"
+  },
+  "halved": {
+    "native": true,
+    "reference": {
+      "width": 600,
+      "height": 450
+    },
+    "input": {
+      "width": 600,
+      "height": 450
+    },
+    "scale": {
+      "x": 1,
+      "y": 1
+    },
+    "message": "输入分辨率与标定参考分辨率一致"
+  },
+  "adapted": {
+    "formatVersion": 1,
+    "model": "brown-conrady",
+    "source": {
+      "width": 600,
+      "height": 450,
+      "label": "approximate-start"
+    },
+    "intrinsics": {
+      "referenceWidth": 600,
+      "referenceHeight": 450,
+      "fx": 510,
+      "fy": 510,
+      "cx": 323.939794,
+      "cy": 209.412361
+    },
+    "distortion": {
+      "k1": -0.4201676465829782,
+      "k2": 0.19064037034965203,
+      "k3": -0.028374775287231587,
+      "p1": 0.0039042581640257395,
+      "p2": -0.0029600003712656016,
+      "validMaxNormalizedRadius": 1.06,
+      "edgeMode": "background",
+      "modelConfig": {
+        "radialOrder": 6,
+        "tangential": true
+      }
+    },
+    "projection": {
+      "mode": "preserve-field",
+      "fillColor": [
+        16,
+        20,
+        28,
+        255
+      ]
+    },
+    "fit": {
+      "method": "levenberg-marquardt",
+      "pointCount": 108,
+      "inputPointCount": 108,
+      "freeParameters": [
+        "cx",
+        "cy",
+        "k1",
+        "k2",
+        "k3",
+        "p1",
+        "p2"
+      ],
+      "focalFixed": true,
+      "iterations": 14,
+      "status": "converged",
+      "rmsPx": 0.06476770331009381,
+      "maxPx": 0.1528125742086261,
+      "cost": 0.4530443823429483,
+      "outliers": [],
+      "outlierCount": 0,
+      "note": "焦距由标定文件固定；仅拟合主点、径向与切向系数（径向项只以 k/f² 等组合影响像素映射）"
+    },
+    "adaptation": {
+      "from": {
+        "width": 1200,
+        "height": 900
+      },
+      "to": {
+        "width": 600,
+        "height": 450
+      },
+      "scale": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "coefficientsRescaled": false
+    }
+  },
+  "note": "图像减半时 fx/fy/cx/cy 乘以 0.5；k1/k2/k3/p1/p2 为无量纲，保持不变。"
+}

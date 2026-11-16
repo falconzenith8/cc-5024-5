@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>广角照片几何校正</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">◱</span>
+      <div>
+        <h1>广角照片几何校正</h1>
+        <p id="modelLine">Brown-Conrady 径向 + 切向模型 · 反向映射重采样</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btnLoadSample" class="btn">载入内置标定图</button>
+      <label class="btn file">
+        载入图片
+        <input id="fileImage" type="file" accept="image/png,image/jpeg,image/webp" />
+      </label>
+      <label class="btn file">
+        载入参数 JSON
+        <input id="fileCal" type="file" accept="application/json,.json" />
+      </label>
+      <label class="btn file">
+        载入对应点
+        <input id="filePoints" type="file" accept="application/json,.json" />
+      </label>
+      <button id="btnExportPng" class="btn">导出校正 PNG</button>
+      <button id="btnExportCal" class="btn">导出参数 JSON</button>
+      <button id="btnExportPoints" class="btn">导出对应点</button>
+      <button id="btnExportEval" class="btn">导出评估 JSON</button>
+    </div>
+  </header>
+
+  <div id="errorBar" class="error-bar" hidden></div>
+
+  <main class="layout">
+    <section class="panel left">
+      <div class="panel-head">
+        <h2>输入与模型</h2>
+        <span id="imageMeta" class="meta">未载入图片</span>
+      </div>
+      <div class="scroll">
+        <div class="section">
+          <div class="section-title">分辨率关系 <span class="hint">内参定义于参考分辨率</span></div>
+          <div id="resolutionBox" class="kvbox">尚未载入图片。</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">显式模型选择</div>
+          <div class="grid2">
+            <label class="field">
+              径向阶数
+              <select id="radialOrder">
+                <option value="2">2 阶 · k1·r²</option>
+                <option value="4">4 阶 · k1·r² + k2·r⁴</option>
+                <option value="6" selected>6 阶 · k1·r² + k2·r⁴ + k3·r⁶</option>
+              </select>
+            </label>
+            <label class="field checkbox">
+              <input id="tangentialOn" type="checkbox" checked />
+              启用切向项 p1, p2
+            </label>
+          </div>
+          <p id="modelFormula" class="formula"></p>
+        </div>
+
+        <div class="section">
+          <div class="section-title">内参（像素）</div>
+          <div class="grid2">
+            <label class="field">fx<input id="in_fx" type="number" step="0.01" /></label>
+            <label class="field">fy<input id="in_fy" type="number" step="0.01" /></label>
+            <label class="field">cx<input id="in_cx" type="number" step="0.01" /></label>
+            <label class="field">cy<input id="in_cy" type="number" step="0.01" /></label>
+          </div>
+          <p class="micro">修改后按“应用到参数”生效；标定点拖动会实时更新拟合。</p>
+          <button id="btnApplyIntrinsics" class="btn wide">应用到参数</button>
+        </div>
+
+        <div class="section">
+          <div class="section-title">畸变系数 <span class="hint">无量纲</span></div>
+          <div class="grid2">
+            <label class="field">k1<input id="in_k1" type="number" step="0.0001" /></label>
+            <label class="field">k2<input id="in_k2" type="number" step="0.0001" /></label>
+            <label class="field">k3<input id="in_k3" type="number" step="0.0001" /></label>
+            <label class="field">p1<input id="in_p1" type="number" step="0.00001" /></label>
+            <label class="field">p2<input id="in_p2" type="number" step="0.00001" /></label>
+            <label class="field">有效半径 r<sub>max</sub><input id="in_validR" type="number" step="0.01" min="0.05" /></label>
+          </div>
+          <button id="btnApplyCoeffs" class="btn wide">应用到参数</button>
+        </div>
+
+        <div class="section">
+          <div class="section-title">输出取景</div>
+          <div class="seg">
+            <button class="segbtn active" data-mode="preserve-field">保留视场</button>
+            <button class="segbtn" data-mode="crop">裁剪输出</button>
+          </div>
+          <div id="planBox" class="kvbox">尚未计算。</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">求解与采样</div>
+          <div class="grid2">
+            <label class="field">最大迭代
+              <input id="invMaxIter" type="number" min="2" max="200" step="1" value="24" />
+            </label>
+            <label class="field">残差容差
+              <input id="invTol" type="number" min="1e-12" max="1e-2" step="1e-7" value="1e-7" />
+            </label>
+            <label class="field">单步上限（归一化）
+              <input id="invStep" type="number" min="0.01" max="2" step="0.05" value="0.6" />
+            </label>
+            <label class="field">采样
+              <select id="sampling">
+                <option value="bilinear">双线性</option>
+                <option value="nearest">最近邻</option>
+              </select>
+            </label>
+          </div>
+          <div id="solverBox" class="kvbox">尚未计算。</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">标定点</div>
+          <p class="micro">在左侧畸变图上拖动橙色点；系统用对应理想网格坐标重新拟合，结果区实时显示残差。</p>
+          <div class="grid3">
+            <label class="field">点半径<input id="ptRadius" type="range" min="3" max="12" value="6" /></label>
+            <label class="field">显示网格
+              <select id="showIdealGrid"><option value="off">关闭</option><option value="on" selected>开启</option></select>
+            </label>
+            <label class="field">求解点
+              <select id="pointMode">
+                <option value="detected" selected>检测到的标记</option>
+                <option value="manual">全部手动</option>
+              </select>
+            </label>
+          </div>
+          <div class="row-btns">
+            <button id="btnRefit" class="btn">重新拟合</button>
+            <button id="btnResetPoints" class="btn">重置标定点</button>
+            <button id="btnAddPoint" class="btn">添加标定点</button>
+            <button id="btnDeletePoint" class="btn">删除选中点</button>
+          </div>
+          <div id="pointInfo" class="kvbox">尚无标定点。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel center">
+      <div class="panel-head">
+        <h2>畸变图 → 校正图</h2>
+        <div class="view-tabs">
+          <button class="tab active" data-view="distorted">畸变图</button>
+          <button class="tab" data-view="rectified">校正图</button>
+          <button class="tab" data-view="compare">并排</button>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <div class="canvas-card" id="distortedCard">
+          <div class="canvas-label">畸变原图 <span id="distortedDims"></span></div>
+          <canvas id="distortedCanvas"></canvas>
+          <div class="canvas-note">拖动橙色标记调整标定；橙色十字为当前拟合下的理想网格交点在畸变图中的位置。</div>
+        </div>
+        <div class="canvas-card" id="rectifiedCard">
+          <div class="canvas-label">校正输出 <span id="rectifiedDims"></span></div>
+          <canvas id="rectifiedCanvas"></canvas>
+          <div class="canvas-note">无效区域以填充色与红色边界显示；俯视坐标与映射见右侧。</div>
+        </div>
+      </div>
+      <div class="bottom-strip">
+        <div class="legend">
+          <span class="dot invalid"></span>模型外/越界
+          <span class="dot ideal"></span>理想网格
+          <span class="dot point"></span>标定点
+        </div>
+        <div id="progress" class="progress" hidden><div class="bar"></div><span>计算中…</span></div>
+        <div id="renderNote" class="render-note">等待载入图片。</div>
+      </div>
+    </section>
+
+    <section class="panel right">
+      <div class="panel-head">
+        <h2>结果与误差</h2>
+        <span id="verdict" class="verdict">未评估</span>
+      </div>
+      <div class="scroll">
+        <div class="section">
+          <div class="section-title">映射探针 <span class="hint">移动鼠标到任一画布</span></div>
+          <div id="probeBox" class="kvbox">将鼠标移到畸变图或校正图上查看正向/反向坐标。</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">坐标误差</div>
+          <div id="errorSummary" class="kvbox">尚无评估结果。</div>
+          <canvas id="errorPlot" class="plot" width="640" height="260"></canvas>
+          <div id="errorTable" class="tablebox"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">线条弯曲测量</div>
+          <div id="bendSummary" class="kvbox">尚无测量。</div>
+          <canvas id="bendPlot" class="plot" width="640" height="220"></canvas>
+        </div>
+
+        <div class="section">
+          <div class="section-title">无效区域与越界</div>
+          <div id="invalidBox" class="kvbox">尚无统计。</div>
+          <canvas id="invalidPlot" class="plot small" width="640" height="150"></canvas>
+        </div>
+
+        <div class="section">
+          <div class="section-title">拟合与模型诊断</div>
+          <div id="fitBox" class="kvbox">尚无拟合。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
